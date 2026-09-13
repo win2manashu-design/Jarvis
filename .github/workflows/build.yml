@@ -1,25 +1,32 @@
 name: Build Android APK
 
-on: [push]
+on:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install System Dependencies
         run: |
-          pip install "cython<3.0.0" buildozer
           sudo apt-get update
           sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev python3-dev zip unzip openjdk-17-jdk zlib1g-dev
 
-      - name: Build APK with Buildozer
+      - name: Install Buildozer & Cython
+        run: |
+          pip install "cython<3.0.0" buildozer
+
+      - name: Configure and Build APK
         run: |
           echo "y" | buildozer init
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy,pyjnius/g' buildozer.spec
@@ -28,7 +35,7 @@ jobs:
           sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
           buildozer -v android debug
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v3
         with:
           name: jarvis-apk
